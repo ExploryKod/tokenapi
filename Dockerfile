@@ -1,45 +1,24 @@
-# syntax = docker/dockerfile:1
+# Use the official Node.js image as the base image
+FROM node:16
 
-# Adjust NODE_VERSION as desired
-ARG NODE_VERSION=16.14.0
-FROM node:${NODE_VERSION}-slim as base
-
-LABEL fly_launch_runtime="Node.js"
-
-# Node.js app lives here
+# Set the working directory inside the container
 WORKDIR /app
 
-# Set production environment
-ENV NODE_ENV=production
+# Copy package.json and package-lock.json to the working directory
+COPY package*.json ./
 
+# Install project dependencies
+RUN npm install
 
-# Throw-away build stage to reduce size of final image
-FROM base as build
+# Copy the rest of the application files to the working directory
+COPY . .
 
-# Install packages needed to build node modules
-RUN apt-get update -qq && \
-    apt-get install -y python pkg-config build-essential 
+# Expose the port on which your API will run (make sure it matches the one in your server.js)
+EXPOSE 5321
 
-# Install node modules
-COPY --link package-lock.json package.json ./
-RUN npm ci --include=dev
+# Set environment variables (replace "your_secret_key_here" with your actual secret key)
+ENV API_KEY=1234567890abcdef
+ENV PORT=5320
 
-# Copy application code
-COPY --link . .
-
-# Build application
-RUN npm run build
-
-# Remove development dependencies
-RUN npm prune --omit=dev
-
-
-# Final stage for app image
-FROM base
-
-# Copy built application
-COPY --from=build /app /app
-
-# Start the server by default, this can be overwritten at runtime
-EXPOSE 5320
-CMD [ "npm", "run", "start" ]
+# Build and start the application using npm start
+CMD ["npm", "start"]
