@@ -32,5 +32,8 @@
     "supabase": "^1.77.9",
     "webpack": "^5.64.4",
     "webpack-cli": "^4.9.1"
+  },
+  "engines": {
+    "node": ">=16"
   }
 }
